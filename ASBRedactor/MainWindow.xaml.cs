@@ -65,6 +65,61 @@ namespace ASBRedactor
         private int ReadInt32(byte[] file, int offset) => BitConverter.ToInt32(file, offset);
         private void LoadTexts(byte[] bytes)
         {
+            var data_offset = ReadInt32(bytes, 0x34);
+            var code_start = ReadInt32(bytes, 0x2c);
+            var code_length = ReadInt32(bytes, 0x30);
+            var list = bytes.ToList();
+            var start = data_offset;
+            Texts.Clear();
+            while (true)
+            {
+                var pos = list.IndexOf(0, start);
+                if(pos == -1)
+                {
+                    break;
+                }
+                var buff = new byte[pos - start];
+                Array.Copy(bytes, start, buff, 0, pos - start);
+                var str = LoadString(buff, 0);
+                if (str[0] == '@')
+                {
+                    start = pos + 1;
+                    continue;
+                }
+                if (str == "__main")
+                {
+                    start = pos + 4;
+                    continue;
+                }
+                var offset = FindBytes(bytes, BitConverter.GetBytes(start-data_offset));
+                if(offset == -1)
+                {
+                    MessageBox.Show("Found text without link");
+                }
+                Texts.Add(new TextLine {Text=str,OffsetPos=offset,OldAddr=start});
+                if (str == "__main") {
+                    start = pos + 4;
+                }
+                else {
+                    start = pos + 1;
+                }
+            }
+        }
+        private int FindBytes(byte[] bytes, byte[] findable)
+        {
+            var code_start = ReadInt32(bytes, 0x2c);
+            var code_length = ReadInt32(bytes, 0x30);
+            for (int i = code_start; i < code_start + code_length; i++)
+            {
+                if (ArraysEqual(bytes, i, findable))
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+        /*private void LoadTexts(byte[] bytes)
+        {
             Texts.Clear();
             var data_offset = ReadInt32(bytes, 0x34);
             var code_start = ReadInt32(bytes, 0x2c);
@@ -89,7 +144,7 @@ namespace ASBRedactor
                     Texts.Add(new TextLine { Text = temp, OffsetPos = offset_pos,OldAddr=offset });
                 }
             }
-        }
+        }*/
         private string LoadString(byte[] bytes, int offset)
         {
             int length = 256;
