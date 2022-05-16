@@ -21,7 +21,7 @@
         <ListView DockPanel.Dock="Bottom" ItemsSource="{Binding Texts}">
             <ListView.ItemTemplate>
                 <DataTemplate>
-                    <TextBox Text="{Binding Mode=TwoWay,Path=Text}"/>
+                    <TextBox Text="{Binding Mode=TwoWay,Path=Text,UpdateSourceTrigger=PropertyChanged}"/>
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
